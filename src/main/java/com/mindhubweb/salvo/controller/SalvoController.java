@@ -5,9 +5,11 @@ import com.mindhubweb.salvo.repository.GamePlayerRepository;
 import com.mindhubweb.salvo.repository.GameRepository;
 import com.mindhubweb.salvo.repository.PlayerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -26,13 +28,19 @@ public class SalvoController {
     private GamePlayerRepository gamePlayerRepository;
 
     @RequestMapping("/games")
-    public List<Object> getAllGames() {
-        return gameRepository.findAll().stream().map(game -> game.toDTO())
-                .collect(Collectors.toList());
+    public Map<String,Object> getAllGames(Authentication authentication) {
+        Map<String, Object> dto = new LinkedHashMap<String, Object>();
+        if(isGuest(authentication))
+            dto.put("player", "Guest");
+        else
+            dto.put("player", loggedInToDTO(getLoggedPlayer(authentication)));
+        dto.put("games",getAllGames());
+        return dto;
     }
 
     @RequestMapping("/game_view/{gamePlayerID}")
-    public Map<String, Object> getGameView(@PathVariable Long gamePlayerID) {
+    public Map<String, Object> getGameView(@PathVariable Long gamePlayerID, Authentication authentication) {
+
         GamePlayer gamePlayer = gamePlayerRepository.findOne(gamePlayerID);
         Map<String, Object> dto = new LinkedHashMap<>();
         dto.put("id", gamePlayer.getGame().getId());
@@ -60,6 +68,19 @@ public class SalvoController {
             }
         });
         return finalList;
+    }
+
+    @RequestMapping(value="/players", method=RequestMethod.POST)
+    public ResponseEntity<Map<String, Object>> players(@RequestParam String email, @RequestParam String password) {
+
+        if (email.isEmpty())
+            return new ResponseEntity<>(makeMap("error", "No name"), HttpStatus.BAD_REQUEST);
+
+        if (playerRepository.findByEmail(email) != null)
+            return new ResponseEntity<>(makeMap("error", "Username already exists"), HttpStatus.CONFLICT);
+
+        Player newPlayer = playerRepository.save(new Player(email,password));
+        return new ResponseEntity<>(makeMap("email", newPlayer.getEmail()), HttpStatus.CREATED);
     }
 
     private Double getPlayerAllScore(Player player){
@@ -97,6 +118,11 @@ public class SalvoController {
         return playerRepository.findAll();
     }
 
+    private List<Map> getAllGames(){
+        return gameRepository.findAll().stream().map(game -> game.toDTO())
+                .collect(Collectors.toList());
+    }
+
     private List<Map> shipLocationsList(Set<Ship> ships) {
         return ships.stream()
                 .map(ship -> ship.toDTO())
@@ -119,5 +145,26 @@ public class SalvoController {
         return salvos.stream()
                 .map(salvo -> salvo.toDTO())
                 .collect(Collectors.toList());
+    }
+
+    private boolean isGuest(Authentication authentication) {
+        return authentication == null || authentication instanceof AnonymousAuthenticationToken;
+    }
+
+    private Map<String, Object> loggedInToDTO(Player player) {
+        Map<String, Object> dto = new LinkedHashMap<String, Object>();
+        dto.put("id", player.getId());
+        dto.put("name", player.getEmail());
+        return dto;
+    }
+
+    private Player getLoggedPlayer(Authentication authentication) {
+        return playerRepository.findByEmail(authentication.getName());
+    }
+
+    private Map<String, Object> makeMap(String key, Object value) {
+        Map<String, Object> map = new HashMap<>();
+        map.put(key, value);
+        return map;
     }
 }
