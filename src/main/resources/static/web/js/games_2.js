@@ -3,8 +3,8 @@ $(function() {
 });
 
 function updateViewGames(data) {
-  var htmlList = data.map(function (games) {
-      return  '<li class="list-group-item">' + new Date(games.crationDate).toLocaleString() + ' ' + games.gamePlayers.map(function(p) { return p.email}).join(', ')  +'</li>';
+  var htmlList = data.games.map(function (games) {
+      return  '<li class="list-group-item">' + new Date(games.crationDate).toLocaleString() + ' ' + games.gamePlayers.map(function(p) { return p.player.email}).join(', ')  +'</li>';
   }).join('');
   document.getElementById("game-list").innerHTML = htmlList;
 }
