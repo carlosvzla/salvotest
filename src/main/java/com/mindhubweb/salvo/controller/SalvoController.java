@@ -39,16 +39,21 @@ public class SalvoController {
     }
 
     @RequestMapping("/game_view/{gamePlayerID}")
-    public Map<String, Object> getGameView(@PathVariable Long gamePlayerID, Authentication authentication) {
-
+    public ResponseEntity<Map<String, Object>> getGameView(@PathVariable Long gamePlayerID, Authentication authentication) {
         GamePlayer gamePlayer = gamePlayerRepository.findOne(gamePlayerID);
-        Map<String, Object> dto = new LinkedHashMap<>();
-        dto.put("id", gamePlayer.getGame().getId());
-        dto.put("created", gamePlayer.getGame().getCreationDate());
-        dto.put("gamePlayers", gamePlayerList(gamePlayer.getGame().getGamePlayer()));
-        dto.put("ships",shipLocationsList(gamePlayer.getShips()));
-        dto.put("salvoes", salvoesList(gamePlayer.getGame()));
-        return dto;
+        if (authentication == null)
+            return new ResponseEntity<>(makeMap("error", "You're Not Logged In!"), HttpStatus.UNAUTHORIZED);
+        else if (gamePlayer.getPlayer().getId() == getLoggedPlayer(authentication).getId()){
+            Map<String, Object> dto = new LinkedHashMap<>();
+            dto.put("id", gamePlayer.getGame().getId());
+            dto.put("created", gamePlayer.getGame().getCreationDate());
+            dto.put("gamePlayers", gamePlayerList(gamePlayer.getGame().getGamePlayer()));
+            dto.put("ships",shipLocationsList(gamePlayer.getShips()));
+            dto.put("salvoes", salvoesList(gamePlayer.getGame()));
+            return new ResponseEntity<>(dto, HttpStatus.OK);
+        }
+        else
+            return new ResponseEntity<>(makeMap("error", "Are you trying to cheat? You are not allowed to access to this Game page data!"), HttpStatus.UNAUTHORIZED);
     }
 
     @RequestMapping("/leaderBoard")
