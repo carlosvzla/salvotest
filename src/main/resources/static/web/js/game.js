@@ -11,7 +11,7 @@ function loadData(){
     $.get('/api/game_view/'+getParameterByName('gp'))
         .done(function(data) {
             let playerInfo;
-            if(data.gamePlayers[0].player.id == getParameterByName('gp'))
+            if(data.gamePlayers[0].id == getParameterByName('gp'))
                 playerInfo = [data.gamePlayers[0].player.email,data.gamePlayers[1].player.email];
             else
                 playerInfo = [data.gamePlayers[1].player.email,data.gamePlayers[0].player.email];

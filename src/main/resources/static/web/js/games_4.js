@@ -22,16 +22,17 @@ function updateViewGames(data) {
 
 function getGameItem(gameData, userData){
     var item = '<li class="list-group-item">'+ new Date(gameData.crationDate).toLocaleString() + ' ' + gameData.gamePlayers.map(function(p) { return p.player.email}).join(', ')  +'</li>';
-    if (isPlayerInGame(userData.id,gameData))
-        item = '<li class="list-group-item"><a href="game_2.html?gp='+ gameData.id + '">'+ new Date(gameData.crationDate).toLocaleString() + ' ' + gameData.gamePlayers.map(function(p) { return p.player.email}).join(', ')  +'</a></li>';
+    var idPlayerInGame = isPlayerInGame(userData.id,gameData);
+    if (idPlayerInGame != -1)
+        item = '<li class="list-group-item"><a href="game_2.html?gp='+ idPlayerInGame + '">'+ new Date(gameData.crationDate).toLocaleString() + ' ' + gameData.gamePlayers.map(function(p) { return p.player.email}).join(', ')  +'</a></li>';
     return item;
 }
 
 function isPlayerInGame(idPlayer,gameData){
-    var isPlayerInGame = false;
+    var isPlayerInGame = -1;
     gameData.gamePlayers.forEach(function (game){
         if(idPlayer === game.player.id)
-            isPlayerInGame = true;
+            isPlayerInGame = game.id;
     });
     return isPlayerInGame;
 }
