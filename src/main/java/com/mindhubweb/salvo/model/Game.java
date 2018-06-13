@@ -82,7 +82,7 @@ public class Game {
     public Map<String, Object> toDTO() {
         Map<String, Object> dto = new LinkedHashMap<>();
         dto.put("id", this.getId());
-        dto.put("crationDate", this.getCreationDate());
+        dto.put("created", this.getCreationDate());
         dto.put("gamePlayers", gamePlayerList(this.getGamePlayer()));
         dto.put("scores", GamePlayerScores(this.getScores()));
         return dto;
